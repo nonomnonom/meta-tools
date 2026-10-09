@@ -1,0 +1,61 @@
+{
+  "name": "meta-tools",
+  "version": "1.0.0",
+  "description": "Agent-ready MCP server for Meta Pages, Instagram, Threads, Ads, and Commerce",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "meta-tools": "dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "docs/",
+    "skills/",
+    "src/config.ts",
+    "src/index.ts",
+    "src/server.ts",
+    "src/constants.ts",
+    "src/types.ts",
+    "src/services/",
+    "src/tools/",
+    "CONTRIBUTING.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "npm run clean && tsc",
+    "prepack": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\""
+  },
+  "license": "MIT",
+  "author": "Nonomxyz",
+  "keywords": [
+    "mcp",
+    "meta",
+    "facebook",
+    "instagram",
+    "threads",
+    "ads-manager",
+    "graph-api",
+    "model-context-protocol",
+    "claude",
+    "ai-tools"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "axios": "^1.7.9",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.0"
+  }
+}

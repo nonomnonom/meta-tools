@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.claude/
+*.tgz
+.DS_Store
+
+# Secrets & environment
+.env
+.env.*
+.env.local
+credentials.json
+secrets.json
+*.pem
+*.p12
+*.key
