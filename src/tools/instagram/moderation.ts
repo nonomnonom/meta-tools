@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, formatDate, ResponseFormatSchema } from "../../services/utils.js";

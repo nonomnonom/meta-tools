@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, formatDate, formatBudget, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
@@ -133,7 +133,7 @@ Returns the new ad set ID.`,
             ])
             .describe("Optimization goal"),
           targeting: z
-            .record(z.unknown())
+            .record(z.string(), z.unknown())
             .describe("Targeting spec object (geo_locations, age, interests, etc.)"),
           start_time: z.string().optional(),
           end_time: z.string().optional(),

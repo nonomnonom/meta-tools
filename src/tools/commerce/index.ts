@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, truncateField, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
@@ -172,7 +172,7 @@ Returns product IDs, names, prices, availability, and more.`,
           limit: z.number().min(1).max(100).default(25).describe("Max results (default 25)"),
           after: z.string().optional().describe("Pagination cursor from previous response"),
           filter: z
-            .record(z.string())
+            .record(z.string(), z.string())
             .optional()
             .describe('Filter criteria (e.g., { availability: "in stock" })'),
           response_format: ResponseFormatSchema,

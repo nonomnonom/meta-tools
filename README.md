@@ -1,6 +1,6 @@
 # meta-tools
 
-`meta-tools` is a stdio [Model Context Protocol](https://modelcontextprotocol.io/) server for Meta business APIs. It gives MCP clients tools for Facebook Pages, Instagram, Threads, Ads Manager, Commerce, Conversions API, and insights.
+`meta-tools` is a self-hosted [Model Context Protocol](https://modelcontextprotocol.io/) server for Meta business APIs, served over Streamable HTTP at `/mcp`. It gives MCP clients tools for Facebook Pages, Instagram, Threads, Ads Manager, Commerce, Conversions API, and insights.
 
 The server can initialize before credentials are configured. A call that needs a missing token returns an actionable error. Meta permissions and app review requirements still apply to every API operation.
 
@@ -20,38 +20,54 @@ The registered tool schemas define the available operations. See [the documentat
 ## Requirements
 
 - Node.js 22 or newer
+- A public HTTPS URL for the MCP server
+- An OAuth 2.1 authorization server that issues JWT access tokens for that MCP URL and the `mcp` scope
 - `META_ACCESS_TOKEN` for Graph API operations
 - `THREADS_ACCESS_TOKEN` for Threads operations
 
 `THREADS_ACCESS_TOKEN` is optional when Threads tools are not needed. Tokens are read from the MCP server process environment. The server does not load `.env` files.
 
-## Run from a checkout
+By default, the server registers the `ads`, `insights`, and `threads` tool groups. Set `META_TOOL_GROUPS` to a comma-separated list to expose only the groups you need, or set it to `all` to register every group. Available groups: `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
 
-Install dependencies and build the server:
+## Run the self-hosted server
+
+The MCP endpoint requires OAuth bearer tokens. Configure an identity provider to issue signed JWT access tokens with the MCP URL as the audience and the `mcp` scope. The server validates the JWT signature using the provider's JWKS endpoint, and checks issuer, audience, expiry, and scope. The MCP URL and OAuth issuer are published through protected resource metadata.
+
+Set these variables in your deployment secret manager:
+
+```sh
+MCP_SERVER_URL=https://mcp.example.com/mcp
+MCP_AUTH_ISSUER=https://identity.example.com/
+MCP_AUTH_JWKS_URL=https://identity.example.com/.well-known/jwks.json
+MCP_ALLOWED_ORIGINS=https://chatgpt.com,https://claude.ai
+META_ACCESS_TOKEN=your_meta_access_token
+THREADS_ACCESS_TOKEN=your_threads_access_token
+META_TOOL_GROUPS=ads,insights,threads
+MCP_HOST=0.0.0.0
+MCP_PORT=3000
+```
+
+Build and run:
 
 ```sh
 npm ci
 npm run build
+npm start
 ```
 
-Configure your MCP client to launch the compiled entry point. Replace the path with the absolute path to this checkout:
+Configure your MCP client with the public URL and the OAuth provider that serves that resource:
 
 ```json
 {
   "mcpServers": {
     "meta-tools": {
-      "command": "node",
-      "args": ["/absolute/path/to/meta-tools/dist/index.js"],
-      "env": {
-        "META_ACCESS_TOKEN": "your_meta_access_token",
-        "THREADS_ACCESS_TOKEN": "your_threads_access_token"
-      }
+      "url": "https://mcp.example.com/mcp"
     }
   }
 }
 ```
 
-Keep credentials in your MCP client's secret or environment manager. Do not commit real tokens or paste them into issues, pull requests, or logs. For token setup and diagnostics, see [Access tokens](docs/authentication/access-tokens.md).
+The client completes OAuth with the configured authorization server. Terminate TLS at a trusted reverse proxy or load balancer and forward traffic to the Node process. Keep Meta credentials in the deployment secret manager; do not put them in client configuration, commit them, or include them in logs. For more details, see [MCP setup and runtime behavior](docs/mcp-server.md) and [Access tokens](docs/authentication/access-tokens.md).
 
 ## Agent workflow
 
@@ -68,7 +84,7 @@ npm test
 npm audit
 ```
 
-Tool registration is organized by API domain. Each domain composes focused feature modules, and `src/tools/index.ts` registers the server's capabilities. See [Architecture](docs/architecture.md) before adding or moving tools. Keep stdout reserved for MCP protocol messages; diagnostics belong on stderr.
+Tool registration is organized by API domain. Each domain composes focused feature modules, and `src/tools/index.ts` registers only the groups selected by `META_TOOL_GROUPS`. See [Architecture](docs/architecture.md) before adding or moving tools. HTTP diagnostics are written by the server process and should not include credentials.
 
 GitHub Actions runs the build, tests, and dependency audit on Node.js 22 and 24 for pushes and pull requests.
 

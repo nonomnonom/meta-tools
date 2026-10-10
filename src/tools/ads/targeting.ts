@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, formatNumber, ResponseFormatSchema } from "../../services/utils.js";
@@ -164,7 +164,7 @@ Returns: Estimated daily reach and audience size.`,
       inputSchema: z
         .object({
           ad_account_id: z.string(),
-          targeting_spec: z.record(z.unknown()).describe("Targeting spec object"),
+          targeting_spec: z.record(z.string(), z.unknown()).describe("Targeting spec object"),
           optimization_goal: z.string().optional(),
           response_format: ResponseFormatSchema,
         })

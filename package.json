@@ -12,6 +12,7 @@
     "docs/",
     "skills/",
     "src/config.ts",
+    "src/http-server.ts",
     "src/index.ts",
     "src/server.ts",
     "src/constants.ts",
@@ -48,11 +49,16 @@
     "node": ">=22"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@modelcontextprotocol/express": "^2.0.2",
+    "@modelcontextprotocol/node": "^2.1.1",
+    "@modelcontextprotocol/server": "^2.3.1",
     "axios": "^1.7.9",
-    "zod": "^3.23.8"
+    "express": "^5.3.0",
+    "jose": "^6.2.12",
+    "zod": "^4.2.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^22.10.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",

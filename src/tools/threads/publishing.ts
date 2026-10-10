@@ -1,9 +1,10 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, truncateField, formatDate, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
 import { THREADS_PROFILE_FIELDS, THREADS_MEDIA_FIELDS } from "../../constants.js";
 import { ThreadsProfile, ThreadsMedia, MetaPaginatedResponse } from "../../types.js";
+import { ThreadsReplyControlSchema } from "./schemas.js";
 
 export function registerThreadsPublishingTools(server: McpServer, client: MetaApiClient): void {
   // ─── Get Threads Profile ──────────────────────────────────────────────────
@@ -144,7 +145,7 @@ Returns: Media ID of the published thread.`,
           text: z.string().min(1).max(500).describe("Post text"),
           reply_to_id: z.string().optional().describe("Thread ID to reply to"),
           quote_post_id: z.string().optional().describe("Thread ID to quote"),
-          reply_control: z.enum(["everyone", "accounts_you_follow", "mentioned_only"]).optional().describe("Who can reply to this post"),
+          reply_control: ThreadsReplyControlSchema.optional(),
           location_id: z.string().optional().describe("Location ID to tag (from Facebook Places search)"),
           response_format: ResponseFormatSchema,
         })
@@ -203,7 +204,7 @@ Args:
           threads_user_id: z.string(),
           image_url: z.string().url().describe("Public image URL"),
           text: z.string().optional().describe("Caption text"),
-          reply_control: z.enum(["everyone", "accounts_you_follow", "mentioned_only"]).optional().describe("Who can reply to this post"),
+          reply_control: ThreadsReplyControlSchema.optional(),
           location_id: z.string().optional().describe("Location ID to tag (from Facebook Places search)"),
           response_format: ResponseFormatSchema,
         })
@@ -263,7 +264,7 @@ Note: Video processing may take time. Polls for up to 60 seconds.`,
           threads_user_id: z.string(),
           video_url: z.string().url().describe("Public video URL"),
           text: z.string().optional(),
-          reply_control: z.enum(["everyone", "accounts_you_follow", "mentioned_only"]).optional().describe("Who can reply to this post"),
+          reply_control: ThreadsReplyControlSchema.optional(),
           location_id: z.string().optional().describe("Location ID to tag (from Facebook Places search)"),
           response_format: ResponseFormatSchema,
         })
@@ -346,7 +347,7 @@ Args:
             .min(2)
             .max(20),
           text: z.string().optional(),
-          reply_control: z.enum(["everyone", "accounts_you_follow", "mentioned_only"]).optional().describe("Who can reply to this post"),
+          reply_control: ThreadsReplyControlSchema.optional(),
           response_format: ResponseFormatSchema,
         })
         .strict(),

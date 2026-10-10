@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { MetaApiClient } from "../services/api.js";
 import { registerInsightsTools } from "../tools/insights/index.js";
 import { registerPageTools } from "../tools/pages/index.js";

@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { MetaApiClient } from "../services/api.js";
 import { registerAdLibraryTools } from "./ad-library/index.js";
 import { registerAdsTools } from "./ads/index.js";
@@ -12,18 +12,19 @@ import { registerPageTools } from "./pages/index.js";
 import { registerThreadsTools } from "./threads/index.js";
 import { registerUtilityTools } from "./utility/index.js";
 import { registerAgenticCapabilities } from "./agent-workflow/index.js";
+import type { ToolGroup } from "../config.js";
 
-export function registerTools(server: McpServer, client: MetaApiClient): void {
+export function registerTools(server: McpServer, client: MetaApiClient, groups: ReadonlySet<ToolGroup>): void {
   registerAgenticCapabilities(server);
-  registerPageTools(server, client);
-  registerInstagramTools(server, client);
-  registerAdsTools(server, client);
-  registerAudiencesTools(server, client);
-  registerInsightsTools(server, client);
-  registerThreadsTools(server, client);
-  registerAdLibraryTools(server, client);
-  registerConversionTools(server, client);
-  registerUtilityTools(server, client);
-  registerChartTools(server);
-  registerCommerceTools(server, client);
+  if (groups.has("pages")) registerPageTools(server, client);
+  if (groups.has("instagram")) registerInstagramTools(server, client);
+  if (groups.has("ads")) registerAdsTools(server, client);
+  if (groups.has("audiences")) registerAudiencesTools(server, client);
+  if (groups.has("insights")) registerInsightsTools(server, client);
+  if (groups.has("threads")) registerThreadsTools(server, client);
+  if (groups.has("ad-library")) registerAdLibraryTools(server, client);
+  if (groups.has("conversions")) registerConversionTools(server, client);
+  if (groups.has("utility")) registerUtilityTools(server, client);
+  if (groups.has("charts")) registerChartTools(server);
+  if (groups.has("commerce")) registerCommerceTools(server, client);
 }

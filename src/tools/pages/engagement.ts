@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, formatDate, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
@@ -33,7 +33,7 @@ Requires pages_manage_metadata permission.`,
           website: z.string().url().optional(),
           phone: z.string().optional(),
           emails: z.array(z.string().email()).optional(),
-          hours: z.record(z.string()).optional().describe("Business hours key-value pairs"),
+          hours: z.record(z.string(), z.string()).optional().describe("Business hours key-value pairs"),
           category: z.string().optional().describe("Page category"),
           username: z.string().optional().describe("Page vanity URL/username"),
           contact_address: z.object({

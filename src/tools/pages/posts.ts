@@ -1,8 +1,8 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, truncateField, formatNumber, formatDate, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
-import { PAGE_FIELDS, POST_FIELDS } from "../../constants.js";
+import { PAGE_FIELDS, PAGE_FIELDS_WITH_TOKEN, POST_FIELDS } from "../../constants.js";
 import { MetaPage, MetaPost, MetaPaginatedResponse } from "../../types.js";
 
 export function registerPagePostTools(server: McpServer, client: MetaApiClient): void {
@@ -40,7 +40,7 @@ Tip: The page tokens are cached automatically. You do not need to manage them ma
     async ({ response_format }) => {
       try {
         const data = await client.get<MetaPaginatedResponse<MetaPage>>("/me/accounts", {
-          fields: PAGE_FIELDS,
+          fields: PAGE_FIELDS_WITH_TOKEN,
         });
 
         if (!data.data?.length) {
@@ -54,8 +54,9 @@ Tip: The page tokens are cached automatically. You do not need to manage them ma
         }
 
         if (response_format === "json") {
+          const safePages = data.data.map(({ access_token: _accessToken, ...page }) => page);
           return {
-            content: [{ type: "text", text: JSON.stringify(data.data, null, 2) }],
+            content: [{ type: "text", text: JSON.stringify(safePages, null, 2) }],
           };
         }
 
@@ -109,7 +110,7 @@ Returns page details including name, category, description, follower counts, and
     async ({ page_id, response_format }) => {
       try {
         const page = await client.get<MetaPage>(`/${page_id}`, {
-          fields: PAGE_FIELDS,
+          fields: PAGE_FIELDS_WITH_TOKEN,
         });
 
         if (page.access_token) {
@@ -117,7 +118,8 @@ Returns page details including name, category, description, follower counts, and
         }
 
         if (response_format === "json") {
-          return { content: [{ type: "text", text: JSON.stringify(page, null, 2) }] };
+          const { access_token: _accessToken, ...safePage } = page;
+          return { content: [{ type: "text", text: JSON.stringify(safePage, null, 2) }] };
         }
 
         const lines = [

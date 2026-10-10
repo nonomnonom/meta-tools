@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import axios, { AxiosError } from "axios";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { MetaApiClient } from "../services/api.js";
 import { registerAdsTools } from "../tools/ads/index.js";
 import { registerPageTools } from "../tools/pages/index.js";

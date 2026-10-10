@@ -6,7 +6,7 @@ import { registerPixelTools } from "./pixels.js";
 import { registerSavedAudienceTools } from "./audiences-and-rules.js";
 import { registerAdAccountAssetTools } from "./operations.js";
 import { registerStudyAndLeadTools } from "./measurement.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { MetaApiClient } from "../../services/api.js";
 
 export function registerAdsTools(server: McpServer, client: MetaApiClient): void {

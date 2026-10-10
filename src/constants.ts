@@ -1,9 +1,11 @@
-export const GRAPH_API_VERSION = "v21.0";
+export const GRAPH_API_VERSION = "v26.0";
 export const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
 export const CHARACTER_LIMIT = 25000;
 
 export const PAGE_FIELDS =
-  "id,name,category,fan_count,followers_count,link,description,about,access_token,instagram_business_account";
+  "id,name,category,fan_count,followers_count,link,description,about,instagram_business_account";
+
+export const PAGE_FIELDS_WITH_TOKEN = `${PAGE_FIELDS},access_token`;
 
 export const POST_FIELDS =
   "id,message,story,created_time,full_picture,permalink_url,from,attachments";

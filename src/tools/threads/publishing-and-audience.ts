@@ -1,8 +1,9 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
 import { MetaPaginatedResponse } from "../../types.js";
+import { ThreadsReplyControlSchema } from "./schemas.js";
 
 export function registerThreadsExtendedPublishingTools(server: McpServer, client: MetaApiClient): void {
   // ─── Publish GIF Thread ────────────────────────────────────────────────
@@ -10,25 +11,25 @@ export function registerThreadsExtendedPublishingTools(server: McpServer, client
     "threads_publish_gif",
     {
       title: "Publish GIF Thread",
-      description: `Publishes a GIF post to Threads using a GIPHY URL.
+      description: `Publishes a GIF post to Threads using a Tenor GIF ID.
 
 Two-step flow: creates a container, then publishes it.
 
 Args:
   - threads_user_id (string): Threads user ID
-  - gif_url (string): GIPHY URL of the GIF
+  - gif_id (string): GIF ID from Tenor
   - text (string, optional): Caption text
   - reply_to_id (string, optional): Thread ID to reply to
-  - reply_control (enum, optional): Who can reply — everyone, accounts_you_follow, or mentioned_only
+  - reply_control (enum, optional): Who can reply to the post
 
 Returns: Media ID of the published thread.`,
       inputSchema: z
         .object({
           threads_user_id: z.string(),
-          gif_url: z.string().url().describe("GIPHY URL of the GIF"),
+          gif_id: z.string().min(1).describe("GIF ID from Tenor"),
           text: z.string().optional().describe("Caption text"),
           reply_to_id: z.string().optional().describe("Thread ID to reply to"),
-          reply_control: z.enum(["everyone", "accounts_you_follow", "mentioned_only"]).optional().describe("Who can reply to this post"),
+          reply_control: ThreadsReplyControlSchema.optional(),
           response_format: ResponseFormatSchema,
         })
         .strict(),
@@ -39,9 +40,12 @@ Returns: Media ID of the published thread.`,
         openWorldHint: false,
       },
     },
-    async ({ threads_user_id, gif_url, text, reply_to_id, reply_control, response_format }) => {
+    async ({ threads_user_id, gif_id, text, reply_to_id, reply_control, response_format }) => {
       try {
-        const fields: Record<string, unknown> = { media_type: "IMAGE", image_url: gif_url };
+        const fields: Record<string, unknown> = {
+          media_type: "TEXT",
+          gif_attachment: { gif_id, provider: "TENOR" },
+        };
         if (text) fields.text = text;
         if (reply_to_id) fields.reply_to_id = reply_to_id;
         if (reply_control) fields.reply_control = reply_control;
@@ -85,7 +89,7 @@ Args:
           threads_user_id: z.string(),
           text: z.string().min(1),
           link_attachment: z.string().url().describe("URL for link preview"),
-          reply_control: z.enum(["everyone", "accounts_you_follow", "mentioned_only"]).optional().describe("Who can reply to this post"),
+          reply_control: ThreadsReplyControlSchema.optional(),
           response_format: ResponseFormatSchema,
         })
         .strict(),

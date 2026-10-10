@@ -6,7 +6,7 @@ import { registerInstagramMediaTools } from "./media.js";
 import { registerInstagramDirectMessageTools } from "./direct-messaging.js";
 import { registerInstagramBroadcastTools } from "./broadcast.js";
 import { registerInstagramCommerceTools } from "./catalog.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { MetaApiClient } from "../../services/api.js";
 
 export function registerInstagramTools(server: McpServer, client: MetaApiClient): void {

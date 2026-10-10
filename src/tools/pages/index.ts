@@ -6,7 +6,7 @@ import { registerPageMediaTools } from "./content.js";
 import { registerPageModerationTools } from "./moderation.js";
 import { registerPageSettingsTools } from "./resources.js";
 import { registerPageStoryTools } from "./publishing.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { MetaApiClient } from "../../services/api.js";
 
 export function registerPageTools(server: McpServer, client: MetaApiClient): void {

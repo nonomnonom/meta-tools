@@ -5,15 +5,16 @@
 ```text
 src/index.ts
   ├── src/config.ts             Read optional credentials from process environment
-  └── src/server.ts             Create the MCP server and Meta API client
-        └── src/tools/index.ts   Register all MCP capabilities
+  └── src/http-server.ts        Authenticate and serve Streamable HTTP
+        └── src/server.ts       Create the MCP server and Meta API client
+        └── src/tools/index.ts   Register selected MCP tool groups
               ├── domain/index.ts
               └── domain/feature.ts
                     ├── services/api.ts
                     └── services/utils.ts
 ```
 
-`src/index.ts` is the executable entry point. `src/server.ts` composes the MCP server and shared API client. `src/tools/index.ts` is the single registry used by server startup. Each domain `index.ts` composes its domain's feature modules; each feature module owns its tool schemas and handlers.
+`src/index.ts` loads configuration and starts the remote HTTP server. `src/http-server.ts` owns OAuth JWT validation, protected resource metadata, Host and Origin validation, and the Streamable HTTP route. It builds an MCP server per HTTP request while sharing a process-scoped `MetaApiClient`, so the Page token cache and refresh coordination survive across calls. `src/server.ts` composes each MCP server around that client. `src/tools/index.ts` is the single registry and registers only the domains selected through `META_TOOL_GROUPS`. Each domain `index.ts` composes its feature modules; each feature module owns its tool schemas and handlers.
 
 The build removes `dist/` before compiling so deleted or renamed source modules cannot remain in release artifacts. `npm pack` runs the build before creating a package.
 
@@ -23,6 +24,7 @@ The build removes `dist/` before compiling so deleted or renamed source modules 
 src/
 ├── config.ts
 ├── index.ts
+├── http-server.ts
 ├── server.ts
 ├── constants.ts
 ├── types.ts
@@ -51,7 +53,7 @@ src/
 - Add a new feature module to its domain `index.ts`; add a new domain to `src/tools/index.ts`.
 - Put shared Graph API and Threads transport behavior in `services/api.ts`, and response formatting or shared schemas in `services/utils.ts`.
 - Keep API roots and version constants in `constants.ts`; avoid duplicating them in tool handlers.
-- Keep stdio stdout protocol-only. Diagnostics belong on stderr.
+- Keep transport and authentication concerns in `http-server.ts`; tool modules receive only the configured Meta API client.
 
 ## Agent workflow prompt and resource
 

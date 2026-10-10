@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, truncateField, formatNumber, formatDate, formatBudget, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
@@ -353,9 +353,9 @@ Args:
         .object({
           ad_account_id: z.string(),
           name: z.string().min(1),
-          evaluation_spec: z.record(z.unknown()),
-          execution_spec: z.record(z.unknown()),
-          schedule_spec: z.record(z.unknown()).optional(),
+          evaluation_spec: z.record(z.string(), z.unknown()),
+          execution_spec: z.record(z.string(), z.unknown()),
+          schedule_spec: z.record(z.string(), z.unknown()).optional(),
           response_format: ResponseFormatSchema,
         })
         .strict(),
@@ -521,7 +521,7 @@ Args:
         .object({
           ad_account_id: z.string(),
           name: z.string().min(1),
-          targeting: z.record(z.unknown()).describe("Targeting specification"),
+          targeting: z.record(z.string(), z.unknown()).describe("Targeting specification"),
           response_format: ResponseFormatSchema,
         })
         .strict(),

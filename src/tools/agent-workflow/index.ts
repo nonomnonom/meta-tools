@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
 /** Registers MCP-native guidance that helps clients plan multi-step Meta work. */
@@ -8,10 +8,10 @@ export function registerAgenticCapabilities(server: McpServer): void {
     {
       title: "Plan and execute a Meta task",
       description: "Guides an assistant through discovery, verification, execution, and reporting for Meta platform tasks.",
-      argsSchema: {
-        task: z.string().min(1).describe("What the user wants to accomplish"),
-        platform: z.string().optional().describe("Facebook, Instagram, Threads, Ads, or Commerce"),
-      },
+      argsSchema: z.object({
+              task: z.string().min(1).describe("What the user wants to accomplish"),
+              platform: z.string().optional().describe("Facebook, Instagram, Threads, Ads, or Commerce"),
+            }),
     },
     ({ task, platform }) => ({
       description: "A safe, tool-guided workflow for the requested Meta task.",

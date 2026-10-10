@@ -87,13 +87,33 @@ curl -X POST "https://graph.threads.net/v1.0/{threads-user-id}/threads_publish" 
 
 ## Reposts
 
-Repost an existing Threads post:
+Repost an existing Threads post. The post ID is the path segment:
 
 ```bash
-curl -X POST "https://graph.threads.net/v1.0/{threads-user-id}/repost" \
-  -d "media_id={threads-media-id}" \
+curl -X POST "https://graph.threads.net/v1.0/{threads-media-id}/repost" \
   -d "access_token={access-token}"
 ```
+
+## GIF attachments
+
+GIF posts are text posts with a `gif_attachment`, not image containers. For example:
+
+```bash
+curl -X POST "https://graph.threads.net/v1.0/{threads-user-id}/threads" \
+  -d 'media_type=TEXT' \
+  -d 'gif_attachment={"gif_id":"{tenor-gif-id}","provider":"TENOR"}' \
+  -d "access_token={access-token}"
+```
+
+Publish the returned container ID with `POST /{threads-user-id}/threads_publish`.
+
+## Search
+
+Keyword search uses `GET /keyword_search` with `q`, `search_type` (`TOP` or `RECENT`), and the fields to return. It requires the `threads_keyword_search` permission.
+
+## Reply controls
+
+When creating a post, the API supports `everyone`, `accounts_you_follow`, `mentioned_only`, `parent_post_author_only`, and `followers_only`. Account permissions and availability are controlled by Meta.
 
 ## Quote Posts
 

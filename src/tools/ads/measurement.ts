@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, truncateField, formatNumber, formatDate, buildPaginationNote, ResponseFormatSchema } from "../../services/utils.js";
@@ -576,7 +576,7 @@ Returns: Number of events received.`,
           event_set_id: z.string().describe("Offline event set ID"),
           event_name: z.string().describe("Event name (e.g., 'Purchase')"),
           event_time: z.number().describe("Unix timestamp"),
-          user_data: z.record(z.string()).describe("Customer match data (hashed PII)"),
+          user_data: z.record(z.string(), z.string()).describe("Customer match data (hashed PII)"),
           custom_data: z.object({
             currency: z.string().optional(),
             value: z.number().optional(),

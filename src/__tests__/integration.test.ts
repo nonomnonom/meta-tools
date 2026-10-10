@@ -5,7 +5,7 @@ import { join } from "path";
 function sendMcpRequest(request: object): Promise<object> {
   return new Promise((resolve, reject) => {
     const proc = spawn("node", [join(process.cwd(), "dist/index.js")], {
-      env: { ...process.env, META_ACCESS_TOKEN: "", THREADS_ACCESS_TOKEN: "" },
+      env: { ...process.env, META_ACCESS_TOKEN: "", THREADS_ACCESS_TOKEN: "", META_TOOL_GROUPS: "all" },
       stdio: ["pipe", "pipe", "pipe"],
     });
 

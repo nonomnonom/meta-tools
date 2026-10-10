@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, truncate, truncateField, formatDate, ResponseFormatSchema } from "../../services/utils.js";
@@ -196,22 +196,19 @@ Args:
       description: `Reposts (shares) an existing thread to your profile.
 
 Args:
-  - threads_user_id (string): Your Threads user ID
   - media_id (string): Thread media ID to repost`,
       inputSchema: z
         .object({
-          threads_user_id: z.string(),
           media_id: z.string().describe("Thread ID to repost"),
           response_format: ResponseFormatSchema,
         })
         .strict(),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
-    async ({ threads_user_id, media_id, response_format }) => {
+    async ({ media_id, response_format }) => {
       try {
         const result = await client.threadsPost<{ id: string }>(
-          `/${threads_user_id}/reposts`,
-          { media_id }
+          `/${media_id}/repost`
         );
 
         if (response_format === "json") {
@@ -233,26 +230,26 @@ Args:
       description: `Searches Threads posts by keyword.
 
 Args:
-  - threads_user_id (string): Threads user ID (for auth context)
   - q (string): Search query
+  - search_type (string): TOP or RECENT (default TOP)
   - limit (number): Max results (default 20)
 
-Note: Results are limited to the authenticated user's content and public threads.`,
+Requires: threads_keyword_search permission.`,
       inputSchema: z
         .object({
-          threads_user_id: z.string(),
           q: z.string().min(1).describe("Search query"),
+          search_type: z.enum(["TOP", "RECENT"]).default("TOP"),
           limit: z.number().int().min(1).max(50).default(20),
           response_format: ResponseFormatSchema,
         })
         .strict(),
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
-    async ({ threads_user_id, q, limit, response_format }) => {
+    async ({ q, search_type, limit, response_format }) => {
       try {
         const data = await client.threadsGet<MetaPaginatedResponse<ThreadsMedia>>(
-          `/${threads_user_id}/threads_search`,
-          { fields: THREADS_MEDIA_FIELDS, limit, q }
+          "/keyword_search",
+          { fields: THREADS_MEDIA_FIELDS, limit, q, search_type }
         );
 
         if (!data.data?.length) {
