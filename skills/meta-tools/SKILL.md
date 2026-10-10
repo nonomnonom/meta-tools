@@ -18,6 +18,9 @@ Use this skill when a task should be completed through the `meta-tools` MCP serv
 
 ## Authentication and errors
 
+- Start with `meta_list_connections`. If the required Graph or Threads account is missing, call `meta_connect_account` (`provider=graph` for Facebook Pages, Instagram, and Ads; `provider=threads` for Threads), then give the user the returned authorization link to open. OAuth is handled by Meta; never request a token copied from a dashboard or chat.
+- After Meta redirects to the callback, ask the user to provide the displayed one-time confirmation code, then call `meta_complete_connection` using the same MCP identity that should own the connected account. Verify with `meta_list_connections` before continuing. Graph and Threads require separate connections.
+- If a connection is expired or revoked, explain that the user must reconnect with the same flow. Only call `meta_disconnect_account` when the user asks to disconnect that provider.
 - Use `meta_health_check` when connection or credentials are relevant; use `meta_debug_token` for token validity and scopes.
 - Never ask the user to expose a token in chat. Do not repeat token values or include them in reports.
 - A listed tool does not imply that the connected token has the required Meta permission. Explain permission errors and the required scope without attempting to bypass them.

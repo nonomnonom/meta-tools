@@ -3,6 +3,7 @@ import { z } from "zod";
 import { MetaApiClient } from "../../services/api.js";
 import { errorResult, formatDate, ResponseFormatSchema } from "../../services/utils.js";
 import { registerDiagnosticTools, type DiagnosticsContext } from "./diagnostics.js";
+import { registerMetaConnectionTools } from "./meta-connections.js";
 
 export function registerUtilityTools(
   server: McpServer,
@@ -80,4 +81,7 @@ export function registerUtilityTools(
   );
 
   registerDiagnosticTools(server, client, diagnostics);
+  if (diagnostics.principalId && diagnostics.connectionStore && diagnostics.config?.metaAuthMode === "per-user") {
+    registerMetaConnectionTools(server, diagnostics.principalId, diagnostics.connectionStore, diagnostics.config);
+  }
 }

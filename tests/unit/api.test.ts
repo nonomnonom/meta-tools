@@ -1,29 +1,41 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import axios from "axios";
+import { createHmac } from "node:crypto";
 import { MetaApiClient } from "../../src/services/api.js";
 import { handleApiError, errorResult, formatCurrency, formatBudget, formatDate, formatNumber, truncate, buildPaginationNote } from "../../src/services/utils.js";
 import { AxiosError } from "axios";
 import { CHARACTER_LIMIT, GRAPH_API_BASE, THREADS_API_BASE } from "../../src/constants.js";
 
 describe("MetaApiClient", () => {
+  it("adds Meta appsecret_proof to server-side Graph requests", async () => {
+    const request = vi.spyOn(axios, "get").mockResolvedValue({ data: { id: "user" } });
+    const client = new MetaApiClient("graph-user-token", undefined, { graphAppSecret: "app-secret" });
+    await client.get("/me", { fields: "id" });
+    expect(request.mock.calls[0][1]?.params).toMatchObject({
+      access_token: "graph-user-token",
+      appsecret_proof: createHmac("sha256", "app-secret").update("graph-user-token").digest("hex"),
+    });
+    request.mockRestore();
+  });
   describe("token validation", () => {
-    it("throws helpful error when META_ACCESS_TOKEN is empty", async () => {
+    it("explains how to connect when the Graph account is missing", async () => {
       const client = new MetaApiClient("");
-      await expect(client.get("/me")).rejects.toThrow("META_ACCESS_TOKEN is not configured");
+      await expect(client.get("/me")).rejects.toThrow("meta_connect_account with provider=graph");
     });
 
-    it("throws helpful error when META_ACCESS_TOKEN is empty on post", async () => {
+    it("explains how to connect when the Graph account is missing on post", async () => {
       const client = new MetaApiClient("");
-      await expect(client.post("/me/feed", { message: "test" })).rejects.toThrow("META_ACCESS_TOKEN is not configured");
+      await expect(client.post("/me/feed", { message: "test" })).rejects.toThrow("meta_connect_account with provider=graph");
     });
 
-    it("throws helpful error when META_ACCESS_TOKEN is empty on delete", async () => {
+    it("explains how to connect when the Graph account is missing on delete", async () => {
       const client = new MetaApiClient("");
-      await expect(client.delete("/12345")).rejects.toThrow("META_ACCESS_TOKEN is not configured");
+      await expect(client.delete("/12345")).rejects.toThrow("meta_connect_account with provider=graph");
     });
 
-    it("throws helpful error when META_ACCESS_TOKEN is empty on delete with params", async () => {
+    it("explains how to connect when the Graph account is missing on delete with params", async () => {
       const client = new MetaApiClient("");
-      await expect(client.delete("/12345/blocked", undefined, { uid: "67890" })).rejects.toThrow("META_ACCESS_TOKEN is not configured");
+      await expect(client.delete("/12345/blocked", undefined, { uid: "67890" })).rejects.toThrow("meta_connect_account with provider=graph");
     });
 
     it("does not throw when token is provided", () => {
@@ -35,7 +47,7 @@ describe("MetaApiClient", () => {
   describe("threads token validation", () => {
     it("throws helpful error when THREADS_ACCESS_TOKEN is missing", () => {
       const client = new MetaApiClient("token");
-      expect(() => client.requireThreadsToken()).toThrow("THREADS_ACCESS_TOKEN");
+      expect(() => client.requireThreadsToken()).toThrow("meta_connect_account with provider=threads");
     });
 
     it("returns token when configured", () => {
@@ -72,15 +84,14 @@ describe("MetaApiClient", () => {
   });
 
   describe("authentication error flow", () => {
-    it("missing token error flows through handleApiError with setup instructions", () => {
+    it("missing token error flows through handleApiError with connection instructions", () => {
       const client = new MetaApiClient("");
       try {
         client.requireUserToken();
       } catch (e) {
         const message = handleApiError(e);
+        expect(message).toContain("meta_connect_account with provider=graph");
         expect(message).toContain("META_ACCESS_TOKEN");
-        expect(message).toContain("MCP server config");
-        expect(message).toContain("developers.facebook.com/tools/explorer");
       }
     });
 
@@ -90,7 +101,7 @@ describe("MetaApiClient", () => {
         client.requireThreadsToken();
       } catch (e) {
         const message = handleApiError(e);
-        expect(message).toContain("THREADS_ACCESS_TOKEN");
+        expect(message).toContain("meta_connect_account with provider=threads");
       }
     });
 

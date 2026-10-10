@@ -4,10 +4,15 @@ import { z } from "zod";
 import { GRAPH_API_VERSION, META_TOOLS_VERSION, THREADS_API_VERSION } from "../../constants.js";
 import { MetaApiClient } from "../../services/api.js";
 import { ResponseFormatSchema } from "../../services/utils.js";
+import type { MetaConnectionStore } from "../../services/meta-connection-store.js";
+import type { ServerConfig } from "../../config.js";
 
 export interface DiagnosticsContext {
   serverUrl?: string;
   authIssuer?: string;
+  principalId?: string;
+  connectionStore?: MetaConnectionStore;
+  config?: ServerConfig;
   toolGroups: string[];
 }
 

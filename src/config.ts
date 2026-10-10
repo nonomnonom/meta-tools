@@ -17,8 +17,16 @@ export type ToolGroup = (typeof TOOL_GROUPS)[number];
 export const DEFAULT_TOOL_GROUPS: ToolGroup[] = ["ads", "insights", "threads", "utility"];
 
 export interface ServerConfig {
+  metaAuthMode: "per-user" | "shared";
   metaAccessToken: string;
   threadsAccessToken?: string;
+  metaAppId?: string;
+  metaAppSecret?: string;
+  metaGraphLoginConfigId?: string;
+  threadsAppId?: string;
+  threadsAppSecret?: string;
+  tokenEncryptionKey?: Buffer;
+  tokenDatabasePath: string;
   toolGroups: ReadonlySet<ToolGroup>;
   mcpServerUrl: URL;
   authIssuer: string;
@@ -67,9 +75,42 @@ export function loadConfig(): ServerConfig {
   const port = Number(process.env.MCP_PORT ?? "3000");
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("MCP_PORT must be a valid TCP port.");
 
+  const metaAuthMode = process.env.META_AUTH_MODE?.trim().toLowerCase() || "per-user";
+  if (metaAuthMode !== "per-user" && metaAuthMode !== "shared") {
+    throw new Error('META_AUTH_MODE must be "per-user" or "shared".');
+  }
+  let tokenEncryptionKey: Buffer | undefined;
+  if (metaAuthMode === "per-user") {
+    const encodedKey = process.env.META_TOKEN_ENCRYPTION_KEY?.trim();
+    if (!encodedKey) throw new Error("META_TOKEN_ENCRYPTION_KEY is required when META_AUTH_MODE=per-user (base64-encoded 32-byte key).");
+    tokenEncryptionKey = Buffer.from(encodedKey, "base64");
+    if (tokenEncryptionKey.length !== 32 || tokenEncryptionKey.toString("base64") !== encodedKey) {
+      throw new Error("META_TOKEN_ENCRYPTION_KEY must be valid base64 encoding of exactly 32 random bytes.");
+    }
+  }
+  const metaAppId = process.env.META_APP_ID?.trim() || undefined;
+  const metaAppSecret = process.env.META_APP_SECRET?.trim() || undefined;
+  const metaGraphLoginConfigId = process.env.META_GRAPH_LOGIN_CONFIG_ID?.trim() || undefined;
+  const threadsAppId = process.env.THREADS_APP_ID?.trim() || undefined;
+  const threadsAppSecret = process.env.THREADS_APP_SECRET?.trim() || undefined;
+  if (metaAuthMode === "per-user" && (!!metaAppId !== !!metaAppSecret || !!metaAppId !== !!metaGraphLoginConfigId)) {
+    throw new Error("Set META_APP_ID, META_APP_SECRET, and META_GRAPH_LOGIN_CONFIG_ID together to enable Facebook Login for Business.");
+  }
+  if (metaAuthMode === "per-user" && (!!threadsAppId !== !!threadsAppSecret)) {
+    throw new Error("Set THREADS_APP_ID and THREADS_APP_SECRET together to enable Threads OAuth.");
+  }
+
   return {
+    metaAuthMode,
     metaAccessToken: process.env.META_ACCESS_TOKEN?.trim() ?? "",
     threadsAccessToken: process.env.THREADS_ACCESS_TOKEN?.trim() || undefined,
+    metaAppId,
+    metaAppSecret,
+    metaGraphLoginConfigId,
+    threadsAppId,
+    threadsAppSecret,
+    tokenEncryptionKey,
+    tokenDatabasePath: process.env.META_TOKEN_DATABASE_PATH?.trim() || "./data/meta-tools.sqlite",
     toolGroups: loadToolGroups(process.env.META_TOOL_GROUPS),
     mcpServerUrl,
     authIssuer,

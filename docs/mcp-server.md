@@ -21,13 +21,32 @@ Required configuration:
 | `MCP_AUTH_ISSUER` | Exact JWT issuer value from the identity provider |
 | `MCP_AUTH_JWKS_URL` | HTTPS URL for the identity provider's signing keys |
 | `MCP_ALLOWED_ORIGINS` | Comma-separated browser Origin allowlist; leave empty for native clients that send no Origin header |
-| `META_ACCESS_TOKEN` | Meta Graph API access token used by enabled tools |
-| `THREADS_ACCESS_TOKEN` | Optional separate Threads API token |
+| `META_AUTH_MODE` | `per-user` (default) or explicit `shared` credentials from environment variables |
+| `META_TOKEN_ENCRYPTION_KEY` | Base64 encoding of 32 random bytes; required for per-user mode |
+| `META_TOKEN_DATABASE_PATH` | Persistent SQLite file for encrypted connections; defaults to `./data/meta-tools.sqlite` |
+| `META_APP_ID` | Meta app ID with Facebook Login for Business configured |
+| `META_APP_SECRET` | Meta app secret; required with the Graph app ID and login config |
+| `META_GRAPH_LOGIN_CONFIG_ID` | Facebook Login for Business configuration ID, with the minimum Graph permissions and user access token selected |
+| `THREADS_APP_ID` | Optional Threads app ID for separate Threads OAuth |
+| `THREADS_APP_SECRET` | Optional Threads app secret, required with its app ID |
+| `META_ACCESS_TOKEN` | Shared Graph API token; used only when `META_AUTH_MODE=shared` |
+| `THREADS_ACCESS_TOKEN` | Shared Threads API token; used only when `META_AUTH_MODE=shared` |
 | `META_TOOL_GROUPS` | Comma-separated tool groups, or `all`; defaults to `ads,insights,threads,utility` |
 | `MCP_HOST` | Bind address; defaults to `0.0.0.0` |
 | `MCP_PORT` | Bind port; defaults to `3000` |
 
-Set secrets through the deployment platform's secret manager. The MCP caller's OAuth identity controls access to the service, while the configured Meta token determines which Meta account and permissions the tools can use. This server is intended for a trusted deployment owner; it does not map each MCP caller to a separate Meta account.
+Set app secrets and the encryption key through the deployment platform's secret manager. Generate a key with `openssl rand -base64 32`. Keep the SQLite file on persistent storage, back it up as sensitive data, and run one server replica against each SQLite file. This implementation does not support sharing the local SQLite file across replicas.
+
+There are two separate OAuth relationships:
+
+- **MCP access:** the server validates the user's bearer token from `MCP_AUTH_ISSUER`. The JWT `sub` is the owner key for that user's Meta connections; the OAuth `client_id` is not used as an account key. The identity provider must issue a stable, unique `sub` per user. If all callers share one service-account subject, they will intentionally share that subject's Meta connection.
+- **Meta access:** call `meta_connect_account` and open the returned short-lived, single-use authorization link. Facebook Login for Business connects Graph API access for Pages, Instagram, and Ads. Threads has its own OAuth app and consent flow. After Meta's callback, copy the one-time confirmation code into `meta_complete_connection` from the MCP identity that should own the account. This pairing step prevents a forwarded OAuth link from silently attaching another user's Meta grant to the link creator. Tokens are exchanged server-side, encrypted at rest, and never returned by MCP tools.
+
+In Meta's app dashboard, allow the exact callback URL `https://your-host/oauth/meta/callback` as a valid OAuth redirect URI. Configure Facebook Login for Business with only the permissions needed by your enabled tools and choose a user access token configuration. The Graph API client includes Meta's HMAC-SHA256 `appsecret_proof` on server API calls; this also supports enabling Meta's “Require App Secret” security setting. Configure the Graph app's deauthorization callback as `https://your-host/oauth/meta/deauthorize/graph`, data deletion callback as `https://your-host/oauth/meta/data-deletion/graph`, and data deletion instructions URL as `https://your-host/oauth/meta/data-deletion`. If you configure a separate Threads app, set its deauthorization/data-deletion callbacks to the corresponding `/threads` paths. Callbacks verify Meta's `signed_request` before deleting matching encrypted connections; data deletion status is available at the returned status URL. Request Advanced Access/App Review where Meta requires it for users outside the app's roles. The server refreshes a Threads long-lived token when it is near expiry and a Threads tool uses it; expired Facebook user tokens require the user to reconnect.
+
+Configure the reverse proxy and access-log pipeline to redact query parameters `code` and `state` on `/oauth/meta/callback`. Meta sends the authorization code and one-time state in that callback URL; the application consumes state once and does not log callback query values, but the proxy sits in front of the app.
+
+`META_AUTH_MODE=shared` is an opt-in compatibility mode for a single trusted operator. In that mode every caller authorized to the MCP endpoint uses the same `META_ACCESS_TOKEN` and optional `THREADS_ACCESS_TOKEN`; do not expose that deployment as a multi-tenant service. To migrate an older setup, set the explicit mode and continue setting those environment tokens, or configure per-user OAuth and remove them.
 
 Build and launch:
 
@@ -53,18 +72,18 @@ The client and authorization provider must support OAuth-protected remote MCP se
 
 ## Tool groups and credentials
 
-By default, `META_TOOL_GROUPS` enables `ads`, `insights`, `threads`, and `utility`. The utility group includes local server diagnostics, token inspection, read-only API connectivity checks, and API error explanations. Set the variable to a comma-separated list to narrow the tool surface, or use `all` for every group. Supported groups are `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
+By default, `META_TOOL_GROUPS` enables `ads`, `insights`, `threads`, and `utility`. The utility group includes per-user account connection management, local server diagnostics, token inspection, read-only API connectivity checks, and API error explanations. Set the variable to a comma-separated list to narrow the tool surface, or use `all` for every group. Supported groups are `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
 
 `meta_server_diagnostics` inspects the local process without making network calls. `meta_check_api_connections` (also available as `meta_health_check`) makes read-only `/me` requests to selected APIs and returns status, latency, stable error codes, and next steps. `meta_diagnose_api_error` maps a known API error code without making a request. These tools never return configured token values.
 
-`META_ACCESS_TOKEN` is used for Facebook, Instagram, Marketing, Commerce, and other Graph API tools. `THREADS_ACCESS_TOKEN` is optional and is used for Threads API operations. The process reads credentials from its environment; it does not load `.env` files or fetch Meta credentials from another service. Calls that require an unset token return an error.
+In per-user mode, `meta_list_connections` reports only the authenticated user's connected accounts. Its Graph permissions come from Meta's granted-permissions endpoint; Threads permissions reflect the scopes requested during OAuth. `meta_disconnect_account` deletes that user's encrypted token and cached Page tokens from local storage; to revoke the grant at Meta too, remove the app from Meta Business Integrations. Call `meta_connect_account` again to reconnect. `meta_complete_connection` consumes the callback's one-time pairing code and binds the grant to the caller's MCP `sub`. In shared mode, the process reads the compatibility tokens from its environment and does not load `.env` files.
 
 The current Graph API and Threads API base versions are declared in [`src/constants.ts`](../src/constants.ts). Check current Meta developer documentation before relying on version-specific endpoint behavior.
 
 ## First calls
 
 - Call `meta_health_check` to see whether credentials and API connectivity are available.
-- Call `meta_debug_token` to inspect token validity and granted scopes. It reports metadata, not a replacement token.
+- Call `meta_list_connections` to inspect linked accounts and permission scopes, then `meta_debug_token` to inspect Graph token validity. Neither returns token values.
 - Call `meta_list_pages` before Page and Instagram work. This loads Page-scoped tokens into an in-memory cache for the current process.
 - Call `meta_list_ad_accounts` to discover ad account IDs before Ads Manager operations.
 
@@ -98,7 +117,7 @@ The repository includes a portable Agent Skill in [`skills/meta-tools`](../skill
 | Client gets `403 insufficient_scope` | Add `mcp` to the access token's scope. |
 | Client cannot reach the server | Check the public HTTPS URL, reverse proxy routing, and the process bind host and port. |
 | Request is rejected for an invalid host | Make sure the request Host matches the hostname in `MCP_SERVER_URL` and the proxy forwards the original host. |
-| A call says the Meta token is missing | Set the relevant Meta token in the deployment secret manager and restart. |
+| A call says no Meta account is connected | Call `meta_connect_account` for Graph or Threads and open the returned link. |
 | Page or Instagram call has no Page token | Call `meta_list_pages` in the current server process first. |
 | Permission error | Inspect token scopes and ensure the Meta app has the permission required by that tool. |
-| Threads call fails while other tools work | Configure `THREADS_ACCESS_TOKEN`; it is separate from the Graph API token. |
+| Threads call fails while other tools work | Connect Threads separately with `meta_connect_account`; the Threads OAuth app and scopes differ from Facebook Login for Business. |

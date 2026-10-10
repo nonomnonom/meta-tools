@@ -8,4 +8,6 @@ Include the affected version or commit, the impact, and steps to reproduce. Do n
 
 ## Credentials and API access
 
-Treat Meta and Threads tokens as secrets. Use least-privilege permissions, store credentials in the MCP client's secret manager, and rotate any token that may have been exposed. Tool availability does not grant Meta permissions or bypass app review.
+Treat Meta and Threads tokens and `META_TOKEN_ENCRYPTION_KEY` as secrets. In per-user mode, the server encrypts OAuth credentials in its SQLite database; protect persistent storage and backups as sensitive data. Use least-privilege permissions, rotate any exposed credential, and do not enable shared-token mode for untrusted MCP users. Tool availability does not grant Meta permissions or bypass app review.
+
+The encryption key is required to read existing connection records. Back it up separately from the database and do not rotate or replace it without first re-encrypting the records; losing it makes saved credentials unrecoverable. Pair OAuth callback grants with `meta_complete_connection` only from the MCP identity that should own that Meta account.

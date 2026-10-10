@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import axios, { AxiosError } from "axios";
+import { randomBytes } from "node:crypto";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { MetaApiClient } from "../../src/services/api.js";
+import { MetaConnectionStore } from "../../src/services/meta-connection-store.js";
 function tokenError(code = 190, error_subcode = 2069032) {
   return new AxiosError("expired", undefined, undefined, undefined, { data: { error: { code, error_subcode } }, status: 400, statusText: "Bad Request", headers: {}, config: {} as any });
 }
@@ -53,6 +58,31 @@ describe("bounded page-token refresh", () => {
     await Promise.all([client.getWithToken("/p/feed", "stale"), client.getWithToken("/p/posts", "stale")]);
     expect(get.mock.calls.filter(([url]) => String(url).endsWith("/me/accounts"))).toHaveLength(1);
     expect(get).toHaveBeenCalledTimes(5);
+  });
+  it("coalesces Page refreshes across separate authenticated HTTP request clients", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "meta-page-refresh-test-"));
+    const store = new MetaConnectionStore(join(directory, "connections.sqlite"), randomBytes(32));
+    store.saveConnection("owner", "graph", { accessToken: "user", expiresAt: null, scopes: [], accountId: "123" });
+    store.savePageToken("owner", "p", "stale");
+    const options = () => ({
+      pageTokens: store.getPageTokens("owner"),
+      onPageTokenCached: (pageId: string, token: string) => store.savePageToken("owner", pageId, token),
+      coordinatePageTokenRefresh: store.coordinatePageTokenRefresh("owner"),
+    });
+    const first = new MetaApiClient("user", undefined, options());
+    const second = new MetaApiClient("user", undefined, options());
+    const get = vi.spyOn(axios, "get").mockRejectedValueOnce(tokenError()).mockRejectedValueOnce(tokenError())
+      .mockResolvedValueOnce({ data: { data: [{ id: "p", access_token: "fresh" }] } })
+      .mockResolvedValue({ data: { ok: true } });
+    try {
+      await Promise.all([first.getWithToken("/p/feed", "stale"), second.getWithToken("/p/posts", "stale")]);
+      expect(get.mock.calls.filter(([url]) => String(url).endsWith("/me/accounts"))).toHaveLength(1);
+      expect(store.getPageTokens("owner")).toEqual([["p", "fresh"]]);
+      expect(get).toHaveBeenCalledTimes(5);
+    } finally {
+      store.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
   it("does not refresh or replay writes", async () => {
     const client = new MetaApiClient("user"); client.cachePageToken("p", "stale");

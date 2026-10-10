@@ -13,12 +13,20 @@ import { registerThreadsTools } from "./threads/index.js";
 import { registerUtilityTools } from "./utility/index.js";
 import { registerAgenticCapabilities } from "./agent-workflow/index.js";
 import type { ToolGroup } from "../config.js";
+import type { MetaConnectionStore } from "../services/meta-connection-store.js";
+import type { ServerConfig } from "../config.js";
 
 export function registerTools(
   server: McpServer,
   client: MetaApiClient,
   groups: ReadonlySet<ToolGroup>,
-  diagnostics: { serverUrl?: string; authIssuer?: string } = {}
+  diagnostics: {
+    serverUrl?: string;
+    authIssuer?: string;
+    principalId?: string;
+    connectionStore?: MetaConnectionStore;
+    config?: ServerConfig;
+  } = {}
 ): void {
   registerAgenticCapabilities(server);
   if (groups.has("pages")) registerPageTools(server, client);

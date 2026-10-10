@@ -16,7 +16,7 @@ export function registerThreadsPublishingTools(server: McpServer, client: MetaAp
 
 Returns: User ID, username, name, bio, and profile picture URL.
 
-Requires: THREADS_ACCESS_TOKEN env var.`,
+Requires: a connected Threads account (or THREADS_ACCESS_TOKEN in shared mode).`,
       inputSchema: z
         .object({
           response_format: ResponseFormatSchema,

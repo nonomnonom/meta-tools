@@ -22,12 +22,11 @@ The registered tool schemas define the available operations. See [the documentat
 - Node.js 22 or newer
 - A public HTTPS URL for the MCP server
 - An OAuth 2.1 authorization server that issues JWT access tokens for that MCP URL and the `mcp` scope
-- `META_ACCESS_TOKEN` for Graph API operations
-- `THREADS_ACCESS_TOKEN` for Threads operations
+- A 32-byte encryption key for per-user Meta credentials
 
-`THREADS_ACCESS_TOKEN` is optional when Threads tools are not needed. Tokens are read from the MCP server process environment. The server does not load `.env` files.
+The default `META_AUTH_MODE=per-user` keeps each caller's Facebook/Instagram/Ads and Threads connections separate. Users call `meta_connect_account`, approve Meta in the browser, then copy the callback's one-time code into `meta_complete_connection` from the MCP identity that should own the account. Tokens are stored encrypted in a local SQLite database. Facebook/Instagram/Ads and Threads use separate Meta OAuth apps and consent flows. The older environment-token deployment remains available with explicit `META_AUTH_MODE=shared`; every authorized MCP caller then acts through that same configured business account.
 
-By default, the server registers the `ads`, `insights`, `threads`, and `utility` tool groups. Utility includes token diagnostics, server runtime diagnostics, API connection checks, and error explanations. Set `META_TOOL_GROUPS` to a comma-separated list to expose only the groups you need, or set it to `all` to register every group. Available groups: `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
+By default, the server registers the `ads`, `insights`, `threads`, and `utility` tool groups. Utility includes per-user Meta account connect/list/disconnect tools, token diagnostics, server runtime diagnostics, API connection checks, and error explanations. Set `META_TOOL_GROUPS` to a comma-separated list to expose only the groups you need, or set it to `all` to register every group. Available groups: `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
 
 ## Run the self-hosted server
 
@@ -40,8 +39,15 @@ MCP_SERVER_URL=https://mcp.example.com/mcp
 MCP_AUTH_ISSUER=https://identity.example.com/
 MCP_AUTH_JWKS_URL=https://identity.example.com/.well-known/jwks.json
 MCP_ALLOWED_ORIGINS=https://chatgpt.com,https://claude.ai
-META_ACCESS_TOKEN=your_meta_access_token
-THREADS_ACCESS_TOKEN=your_threads_access_token
+META_AUTH_MODE=per-user
+# Generate with: openssl rand -base64 32
+META_TOKEN_ENCRYPTION_KEY=base64-encoded-random-32-byte-key
+META_TOKEN_DATABASE_PATH=./data/meta-tools.sqlite
+META_APP_ID=your_facebook_app_id
+META_APP_SECRET=your_facebook_app_secret
+META_GRAPH_LOGIN_CONFIG_ID=your_facebook_login_for_business_config_id
+THREADS_APP_ID=your_threads_app_id
+THREADS_APP_SECRET=your_threads_app_secret
 META_TOOL_GROUPS=ads,insights,threads,utility
 MCP_HOST=0.0.0.0
 MCP_PORT=3000
@@ -67,7 +73,7 @@ Configure your MCP client with the public URL and the OAuth provider that serves
 }
 ```
 
-The client completes OAuth with the configured authorization server. Terminate TLS at a trusted reverse proxy or load balancer and forward traffic to the Node process. Keep Meta credentials in the deployment secret manager; do not put them in client configuration, commit them, or include them in logs. For more details, see [MCP setup and runtime behavior](docs/mcp-server.md) and [Access tokens](docs/authentication/access-tokens.md).
+The MCP client completes OAuth with the configured identity provider. Separately, each user calls `meta_connect_account` and opens the returned one-time URL to authorize Facebook Login for Business or Threads. Keep the encryption key and app secrets in the deployment secret manager. Persist the SQLite data directory across restarts and run one server replica per database file. For configuration and the shared-account migration, see [MCP setup and runtime behavior](docs/mcp-server.md).
 
 ## Agent workflow
 
