@@ -189,5 +189,3 @@ Use the test_event_code from Events Manager > Test Events tab.`,
     }
   );
 }
-
-\n

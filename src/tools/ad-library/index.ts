@@ -125,5 +125,3 @@ Note: Requires a valid access token but does NOT require ad account ownership.`,
     }
   );
 }
-
-\n

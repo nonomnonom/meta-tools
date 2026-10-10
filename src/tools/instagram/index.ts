@@ -19,7 +19,3 @@ export function registerInstagramTools(server: McpServer, client: MetaApiClient)
   registerInstagramBroadcastTools(server, client);
   registerInstagramCommerceTools(server, client);
 }
-
-
-
-\n

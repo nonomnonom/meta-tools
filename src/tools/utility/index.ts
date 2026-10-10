@@ -164,5 +164,3 @@ Returns: Token validity, number of cached page tokens, Threads token status, and
   );
 
 }
-
-\n

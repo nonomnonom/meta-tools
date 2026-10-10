@@ -19,7 +19,3 @@ export function registerPageTools(server: McpServer, client: MetaApiClient): voi
   registerPageSettingsTools(server, client);
   registerPageStoryTools(server, client);
 }
-
-
-
-\n

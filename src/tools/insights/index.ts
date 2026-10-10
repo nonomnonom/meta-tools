@@ -462,5 +462,3 @@ Provide one of: ad_id, adset_id, campaign_id, or ad_account_id.`,
     }
   );
 }
-
-\n

@@ -11,8 +11,3 @@ export function registerThreadsTools(server: McpServer, client: MetaApiClient): 
   registerThreadsDiscoveryTools(server, client);
   registerThreadsExtendedPublishingTools(server, client);
 }
-
-
-
-
-\n

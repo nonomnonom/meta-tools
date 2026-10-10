@@ -19,8 +19,3 @@ export function registerAdsTools(server: McpServer, client: MetaApiClient): void
   registerAdAccountAssetTools(server, client);
   registerStudyAndLeadTools(server, client);
 }
-
-
-
-
-\n

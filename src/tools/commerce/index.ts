@@ -639,5 +639,3 @@ Returns the new feed ID.`,
     }
   );
 }
-
-\n

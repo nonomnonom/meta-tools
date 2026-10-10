@@ -254,5 +254,3 @@ Example — comparing two weeks:
     }
   );
 }
-
-\n
