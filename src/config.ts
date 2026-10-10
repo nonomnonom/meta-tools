@@ -14,7 +14,7 @@ export const TOOL_GROUPS = [
 
 export type ToolGroup = (typeof TOOL_GROUPS)[number];
 
-const DEFAULT_TOOL_GROUPS: ToolGroup[] = ["ads", "insights", "threads"];
+export const DEFAULT_TOOL_GROUPS: ToolGroup[] = ["ads", "insights", "threads", "utility"];
 
 export interface ServerConfig {
   metaAccessToken: string;

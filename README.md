@@ -27,7 +27,7 @@ The registered tool schemas define the available operations. See [the documentat
 
 `THREADS_ACCESS_TOKEN` is optional when Threads tools are not needed. Tokens are read from the MCP server process environment. The server does not load `.env` files.
 
-By default, the server registers the `ads`, `insights`, and `threads` tool groups. Set `META_TOOL_GROUPS` to a comma-separated list to expose only the groups you need, or set it to `all` to register every group. Available groups: `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
+By default, the server registers the `ads`, `insights`, `threads`, and `utility` tool groups. Utility includes token diagnostics, server runtime diagnostics, API connection checks, and error explanations. Set `META_TOOL_GROUPS` to a comma-separated list to expose only the groups you need, or set it to `all` to register every group. Available groups: `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
 
 ## Run the self-hosted server
 
@@ -42,7 +42,7 @@ MCP_AUTH_JWKS_URL=https://identity.example.com/.well-known/jwks.json
 MCP_ALLOWED_ORIGINS=https://chatgpt.com,https://claude.ai
 META_ACCESS_TOKEN=your_meta_access_token
 THREADS_ACCESS_TOKEN=your_threads_access_token
-META_TOOL_GROUPS=ads,insights,threads
+META_TOOL_GROUPS=ads,insights,threads,utility
 MCP_HOST=0.0.0.0
 MCP_PORT=3000
 ```
@@ -83,6 +83,8 @@ npm run build
 npm test
 npm audit
 ```
+
+Tests live under `tests/` by layer. Run `npm run test:unit`, `npm run test:contracts`, or `npm run test:integration` to focus a suite; `npm test` runs all three. The HTTP integration suite uses a local test identity provider and an MCP client, so it does not require Meta credentials or contact Meta APIs.
 
 Tool registration is organized by API domain. Each domain composes focused feature modules, and `src/tools/index.ts` registers only the groups selected by `META_TOOL_GROUPS`. See [Architecture](docs/architecture.md) before adding or moving tools. HTTP diagnostics are written by the server process and should not include credentials.
 

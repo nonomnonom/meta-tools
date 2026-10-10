@@ -12,7 +12,7 @@ function getResourceFromAudience(audience: string | string[], resourceUrl: URL):
   return audiences.find((value) => value === resourceUrl.href) ? resourceUrl : undefined;
 }
 
-export function startHttpServer(config: ServerConfig): void {
+export function createHttpApp(config: ServerConfig) {
   const jwks = createRemoteJWKSet(config.authJwksUrl);
   const verifier = {
     async verifyAccessToken(token: string): Promise<AuthInfo> {
@@ -81,7 +81,11 @@ export function startHttpServer(config: ServerConfig): void {
     void handleMcp(request, response, request.body);
   });
 
-  app.listen(config.port, config.host, () => {
+  return app;
+}
+
+export function startHttpServer(config: ServerConfig): void {
+  createHttpApp(config).listen(config.port, config.host, () => {
     console.info(`meta-tools MCP listening at ${config.mcpServerUrl.href}`);
   });
 }

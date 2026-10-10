@@ -22,6 +22,10 @@ export class MetaApiClient {
     }
   }
 
+  hasUserToken(): boolean {
+    return this.userToken.length > 0;
+  }
+
   async get<T>(path: string, params: Record<string, unknown> = {}): Promise<T> {
     this.requireUserToken();
     const response = await axios.get(`${GRAPH_API_BASE}${path}`, {

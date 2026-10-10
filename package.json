@@ -25,9 +25,15 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
+    "inspect:web": "npx --yes @modelcontextprotocol/inspector",
+    "inspect:cli": "npx --yes @modelcontextprotocol/inspector --cli",
+    "inspect:tui": "npx --yes @modelcontextprotocol/inspector --tui",
     "build": "npm run clean && tsc",
     "prepack": "npm run build",
     "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:contracts": "vitest run tests/contracts",
+    "test:integration": "vitest run tests/integration",
     "test:watch": "vitest",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\""
   },
@@ -58,6 +64,7 @@
     "zod": "^4.2.0"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
     "@types/express": "^5.0.6",
     "@types/node": "^22.10.0",
     "tsx": "^4.19.2",

@@ -1,5 +1,8 @@
+export const META_TOOLS_VERSION = "1.0.0";
 export const GRAPH_API_VERSION = "v26.0";
 export const GRAPH_API_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
+export const THREADS_API_VERSION = "v1.0";
+export const THREADS_API_BASE = `https://graph.threads.net/${THREADS_API_VERSION}`;
 export const CHARACTER_LIMIT = 25000;
 
 export const PAGE_FIELDS =
@@ -37,7 +40,6 @@ export const AD_ACCOUNT_FIELDS =
 export const INSIGHT_FIELDS =
   "impressions,reach,clicks,spend,cpm,cpc,cpp,ctr,frequency,unique_clicks,actions,cost_per_action_type,conversions,conversion_values,cost_per_conversion,purchase_roas,inline_link_clicks,inline_link_click_ctr,cost_per_inline_link_click,inline_post_engagement,outbound_clicks,outbound_clicks_ctr,cost_per_outbound_click,social_spend,video_play_actions,video_avg_time_watched_actions,video_p25_watched_actions,video_p50_watched_actions,video_p75_watched_actions,video_p95_watched_actions,video_p100_watched_actions,video_thruplay_watched_actions,cost_per_thruplay,quality_ranking,engagement_rate_ranking,conversion_rate_ranking,date_start,date_stop";
 
-export const THREADS_API_BASE = "https://graph.threads.net/v1.0";
 
 export const THREADS_PROFILE_FIELDS =
   "id,username,name,threads_profile_picture_url,threads_biography";

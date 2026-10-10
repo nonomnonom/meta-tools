@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { MetaApiClient } from "../services/api.js";
-import { handleApiError, errorResult, formatCurrency, formatBudget, formatDate, formatNumber, truncate, buildPaginationNote } from "../services/utils.js";
+import { MetaApiClient } from "../../src/services/api.js";
+import { handleApiError, errorResult, formatCurrency, formatBudget, formatDate, formatNumber, truncate, buildPaginationNote } from "../../src/services/utils.js";
 import { AxiosError } from "axios";
-import { CHARACTER_LIMIT, GRAPH_API_BASE, THREADS_API_BASE } from "../constants.js";
+import { CHARACTER_LIMIT, GRAPH_API_BASE, THREADS_API_BASE } from "../../src/constants.js";
 
 describe("MetaApiClient", () => {
   describe("token validation", () => {

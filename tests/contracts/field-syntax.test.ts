@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { IG_MEDIA_FIELDS } from "../constants.js";
-import { MetaPaginatedResponse } from "../types.js";
+import { IG_MEDIA_FIELDS } from "../../src/constants.js";
+import { MetaPaginatedResponse } from "../../src/types.js";
 
 describe("API field syntax correctness", () => {
   describe("Business Discovery", () => {

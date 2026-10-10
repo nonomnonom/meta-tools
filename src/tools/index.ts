@@ -14,7 +14,12 @@ import { registerUtilityTools } from "./utility/index.js";
 import { registerAgenticCapabilities } from "./agent-workflow/index.js";
 import type { ToolGroup } from "../config.js";
 
-export function registerTools(server: McpServer, client: MetaApiClient, groups: ReadonlySet<ToolGroup>): void {
+export function registerTools(
+  server: McpServer,
+  client: MetaApiClient,
+  groups: ReadonlySet<ToolGroup>,
+  diagnostics: { serverUrl?: string; authIssuer?: string } = {}
+): void {
   registerAgenticCapabilities(server);
   if (groups.has("pages")) registerPageTools(server, client);
   if (groups.has("instagram")) registerInstagramTools(server, client);
@@ -24,7 +29,7 @@ export function registerTools(server: McpServer, client: MetaApiClient, groups: 
   if (groups.has("threads")) registerThreadsTools(server, client);
   if (groups.has("ad-library")) registerAdLibraryTools(server, client);
   if (groups.has("conversions")) registerConversionTools(server, client);
-  if (groups.has("utility")) registerUtilityTools(server, client);
+  if (groups.has("utility")) registerUtilityTools(server, client, { ...diagnostics, toolGroups: [...groups] });
   if (groups.has("charts")) registerChartTools(server);
   if (groups.has("commerce")) registerCommerceTools(server, client);
 }

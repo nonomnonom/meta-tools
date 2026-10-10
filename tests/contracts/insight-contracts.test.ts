@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { McpServer } from "@modelcontextprotocol/server";
-import { MetaApiClient } from "../services/api.js";
-import { registerInsightsTools } from "../tools/insights/index.js";
-import { registerPageTools } from "../tools/pages/index.js";
-import { registerInstagramTools } from "../tools/instagram/index.js";
+import { MetaApiClient } from "../../src/services/api.js";
+import { registerInsightsTools } from "../../src/tools/insights/index.js";
+import { registerPageTools } from "../../src/tools/pages/index.js";
+import { registerInstagramTools } from "../../src/tools/instagram/index.js";
 
 describe("insight request and response contracts", () => {
   const registered = new Map<string, { schema: { parse: (args: unknown) => unknown }; run: (args: any) => Promise<any> }>();

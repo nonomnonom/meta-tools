@@ -23,7 +23,7 @@ Required configuration:
 | `MCP_ALLOWED_ORIGINS` | Comma-separated browser Origin allowlist; leave empty for native clients that send no Origin header |
 | `META_ACCESS_TOKEN` | Meta Graph API access token used by enabled tools |
 | `THREADS_ACCESS_TOKEN` | Optional separate Threads API token |
-| `META_TOOL_GROUPS` | Comma-separated tool groups, or `all` |
+| `META_TOOL_GROUPS` | Comma-separated tool groups, or `all`; defaults to `ads,insights,threads,utility` |
 | `MCP_HOST` | Bind address; defaults to `0.0.0.0` |
 | `MCP_PORT` | Bind port; defaults to `3000` |
 
@@ -53,7 +53,9 @@ The client and authorization provider must support OAuth-protected remote MCP se
 
 ## Tool groups and credentials
 
-By default, `META_TOOL_GROUPS` enables `ads`, `insights`, and `threads`. Set it to a comma-separated list to narrow the tool surface, or use `all` for every group. Supported groups are `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
+By default, `META_TOOL_GROUPS` enables `ads`, `insights`, `threads`, and `utility`. The utility group includes local server diagnostics, token inspection, read-only API connectivity checks, and API error explanations. Set the variable to a comma-separated list to narrow the tool surface, or use `all` for every group. Supported groups are `ad-library`, `ads`, `audiences`, `charts`, `commerce`, `conversions`, `insights`, `instagram`, `pages`, `threads`, and `utility`.
+
+`meta_server_diagnostics` inspects the local process without making network calls. `meta_check_api_connections` (also available as `meta_health_check`) makes read-only `/me` requests to selected APIs and returns status, latency, stable error codes, and next steps. `meta_diagnose_api_error` maps a known API error code without making a request. These tools never return configured token values.
 
 `META_ACCESS_TOKEN` is used for Facebook, Instagram, Marketing, Commerce, and other Graph API tools. `THREADS_ACCESS_TOKEN` is optional and is used for Threads API operations. The process reads credentials from its environment; it does not load `.env` files or fetch Meta credentials from another service. Calls that require an unset token return an error.
 
@@ -65,6 +67,20 @@ The current Graph API and Threads API base versions are declared in [`src/consta
 - Call `meta_debug_token` to inspect token validity and granted scopes. It reports metadata, not a replacement token.
 - Call `meta_list_pages` before Page and Instagram work. This loads Page-scoped tokens into an in-memory cache for the current process.
 - Call `meta_list_ad_accounts` to discover ad account IDs before Ads Manager operations.
+
+## MCP protocol debugging
+
+Use the official [MCP Inspector](https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector) to inspect transport behavior, list schemas, and invoke tools interactively. Its web client is the best first pass for OAuth and request/response inspection; the CLI is useful for repeatable probes, and the TUI provides a terminal workflow.
+
+```sh
+npm run inspect:web
+npm run inspect:tui
+npm run inspect:cli -- --server-url "$MCP_SERVER_URL" --transport http --method tools/list --strict --format json
+```
+
+For an OAuth-protected remote server, sign in with the web Inspector first, then use the CLI's stored OAuth state (`--use-stored-auth`) for repeatable local probes. Keep that state private. The CLI supports `initialize`, `tools/list`, and `tools/call`; `--strict` checks tool-schema portability and returns a nonzero exit for schema errors. See the [Inspector CLI reference](https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/cli) for auth, output, and exit-code details.
+
+After connecting in Inspector, call `meta_server_diagnostics` for process state, `meta_check_api_connections` for read-only Graph/Threads access checks, `meta_debug_token` for token scopes/expiry, or `meta_diagnose_api_error` for an error-code explanation. These tools complement Inspector's protocol trace; they do not run shell commands or modify account state.
 
 The Page token cache is process-local and is rebuilt after restart. API permissions are determined by the configured Meta app and token; tool availability does not grant permissions.
 
